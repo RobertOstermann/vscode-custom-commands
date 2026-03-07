@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2022-11-09
+
+- Do not show `Status Bar Buttons: You have no commands or dropdowns.` warning.
+
 ## [1.0.9] - 2022-11-09
 
 - Add defaults for some configuration options.

@@ -8,7 +8,10 @@ import { buildConfigFromPackageJson } from "./packageJson";
 import CommandButton from "./types/command";
 import StatusBarButton from "./types/statusBar";
 
-const init = async (context: vscode.ExtensionContext, disposables: vscode.Disposable[]): Promise<vscode.Disposable[]> => {
+const init = async (
+  context: vscode.ExtensionContext,
+  disposables: vscode.Disposable[],
+): Promise<vscode.Disposable[]> => {
   const commands: CommandButton[] = [];
   const commandIds: Set<string> = new Set();
 
@@ -19,7 +22,7 @@ const init = async (context: vscode.ExtensionContext, disposables: vscode.Dispos
       command: Configuration.extensionName + ".refreshButtons",
       label: Configuration.reloadButton(),
       tooltip: "Refresh the status bar buttons.",
-      priority: 0
+      priority: 0,
     };
 
     Button.createStatusBarButton(statusBarOptions, disposables);
@@ -30,7 +33,9 @@ const init = async (context: vscode.ExtensionContext, disposables: vscode.Dispos
   }
 
   if (Configuration.loadNpmCommands()) {
-    commands.push(...(await buildConfigFromPackageJson(Configuration.defaultColor())));
+    commands.push(
+      ...(await buildConfigFromPackageJson(Configuration.defaultColor())),
+    );
   }
 
   Command.createCommands(context, commands, commandIds, disposables);

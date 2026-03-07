@@ -3,7 +3,7 @@ import { StatusBarAlignment, workspace } from "vscode";
 import CommandButton, { TerminalOptions } from "./types/command";
 
 export const getPackageJson = async (): Promise<undefined | any> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     const cwd = workspace.workspaceFolders[0].uri.fsPath;
 
     try {
@@ -25,10 +25,10 @@ export const buildConfigFromPackageJson = async (defaultColor: string) => {
   const terminalOptions: TerminalOptions = {
     cwd: workspace.workspaceFolders[0].uri.fsPath,
     focus: true,
-    singleInstance: true
+    singleInstance: true,
   };
 
-  return Object.keys(scripts).map(key => ({
+  return Object.keys(scripts).map((key) => ({
     id: key,
     label: key,
     command: `npm run ${key}`,

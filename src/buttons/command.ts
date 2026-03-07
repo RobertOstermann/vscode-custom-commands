@@ -6,31 +6,37 @@ import StatusBarButton from "../types/statusBar";
 import Button from "./button";
 
 export default class Command {
-  static createCommands(context: vscode.ExtensionContext, commands: CommandButton[], commandIds: Set<string>, disposables: vscode.Disposable[]): void {
+  static createCommands(
+    context: vscode.ExtensionContext,
+    commands: CommandButton[],
+    commandIds: Set<string>,
+    disposables: vscode.Disposable[],
+  ): void {
     if (!commands.length) {
-      vscode.window.setStatusBarMessage(
-        "Status Bar Buttons: You have no commands or dropdowns.",
-        4000
-      );
-
       return;
     }
 
-    commands.forEach(
-      (command: CommandButton) => {
-        const vsCommand = Configuration.extensionName + "." + command.id.replace(" ", "");
+    commands.forEach((command: CommandButton) => {
+      const vsCommand =
+        Configuration.extensionName + "." + command.id.replace(" ", "");
 
-        if (commandIds.has(vsCommand)) {
-          vscode.window.showErrorMessage(`The id '${command.id}' is used for multiple commands or dropdowns. Please remove duplicate id's.`);
-          return;
-        }
-        commandIds.add(vsCommand);
+      if (commandIds.has(vsCommand)) {
+        vscode.window.showErrorMessage(
+          `The id '${command.id}' is used for multiple commands or dropdowns. Please remove duplicate id's.`,
+        );
+        return;
+      }
+      commandIds.add(vsCommand);
 
-        const disposable = vscode.commands.registerCommand(vsCommand, async () => {
+      const disposable = vscode.commands.registerCommand(
+        vsCommand,
+        async () => {
           const variables = Configuration.variables(command);
 
           if (!command) {
-            vscode.window.showErrorMessage("No command to execute for this action");
+            vscode.window.showErrorMessage(
+              "No command to execute for this action",
+            );
             return;
           }
 
@@ -39,13 +45,21 @@ export default class Command {
           }
 
           if (command.useVsCodeApi) {
-            vscode.commands.executeCommand(command.command, ...(command.args || []));
+            vscode.commands.executeCommand(
+              command.command,
+              ...(command.args || []),
+            );
           } else {
             const terminalName = command.terminal.name || command.label;
 
-            let associatedTerminal = vscode.window.terminals.find(terminal => terminal.name === terminalName);
+            let associatedTerminal = vscode.window.terminals.find(
+              (terminal) => terminal.name === terminalName,
+            );
             if (!associatedTerminal || !command.terminal.singleInstance) {
-              associatedTerminal = vscode.window.createTerminal({ name: terminalName, cwd: variables.cwd });
+              associatedTerminal = vscode.window.createTerminal({
+                name: terminalName,
+                cwd: variables.cwd,
+              });
             }
 
             if (command.terminal.clear) {
@@ -53,27 +67,29 @@ export default class Command {
             }
 
             associatedTerminal.show(!command.terminal.focus);
-            associatedTerminal.sendText(this.interpolateString(command.command, variables));
+            associatedTerminal.sendText(
+              this.interpolateString(command.command, variables),
+            );
           }
-        });
+        },
+      );
 
-        context.subscriptions.push(disposable);
-        disposables.push(disposable);
+      context.subscriptions.push(disposable);
+      disposables.push(disposable);
 
-        if (command.showButton) {
-          const statusBarOptions: StatusBarButton = {
-            alignment: command.alignment,
-            color: command.color || Configuration.defaultColor(),
-            command: vsCommand,
-            label: command.label,
-            tooltip: command.tooltip || vsCommand,
-            priority: command.priority
-          };
+      if (command.showButton) {
+        const statusBarOptions: StatusBarButton = {
+          alignment: command.alignment,
+          color: command.color || Configuration.defaultColor(),
+          command: vsCommand,
+          label: command.label,
+          tooltip: command.tooltip || vsCommand,
+          priority: command.priority,
+        };
 
-          Button.createStatusBarButton(statusBarOptions, disposables);
-        }
+        Button.createStatusBarButton(statusBarOptions, disposables);
       }
-    );
+    });
   }
 
   static interpolateString(command: string, variables: object): string {

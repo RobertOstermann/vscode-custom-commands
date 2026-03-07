@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const disposable = vscode.commands.registerCommand(
     `${Configuration.extensionName}.refreshButtons`,
-    () => initialize(context)
+    () => initialize(context),
   );
 
   context.subscriptions.push(disposable);
