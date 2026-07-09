@@ -1,16 +1,8 @@
 {
   "name": "better-status-bar",
   "displayName": "Better Status Bar",
+  "version": "2.0.0",
   "description": "Add customizable buttons to the status bar to execute actions or tasks",
-  "version": "1.1.0",
-  "publisher": "RobertOstermann",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/RobertOstermann/vscode-action-buttons"
-  },
-  "engines": {
-    "vscode": "^1.27.2"
-  },
   "categories": [
     "Other"
   ],
@@ -21,10 +13,29 @@
     "task",
     "runner"
   ],
-  "activationEvents": [
-    "*"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RobertOstermann/vscode-action-buttons"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Robert Ostermann",
+    "url": "https://github.com/RobertOstermann"
+  },
+  "publisher": "RobertOstermann",
+  "type": "commonjs",
   "main": "./out/src/extension",
+  "scripts": {
+    "build": "rimraf out && tsc -p ./ && tsc-alias -p tsconfig.json && npm run copyfiles",
+    "copyfiles": "copyfiles \"./src/schema/*.json\" \"./out\"",
+    "fix": "eslint . --fix",
+    "lint": "eslint .",
+    "publish": "vsce publish",
+    "ts:check": "tsc --skipLibCheck --noEmit",
+    "vscode:prepackage": "npm run build",
+    "vscode:prepublish": "npm run build",
+    "watch": "concurrently \"tsc -watch -p ./\" \"tsc-alias -p tsconfig.json --watch\""
+  },
   "contributes": {
     "commands": [
       {
@@ -45,7 +56,7 @@
           "type": "string",
           "required": false,
           "default": "",
-          "markdownDescription": "Use a configuration file named `statusBar.json` located in the workspace. Set this to `Find` to search for the configuration file in the workspace."
+          "markdownDescription": "Use a configuration file named `statusBar.json` located in the workspace. Set this to `find` to search for the configuration file in the workspace."
         },
         "betterStatusBar.loadNpmCommands": {
           "type": "boolean",
@@ -147,7 +158,7 @@
                       "null"
                     ],
                     "default": null,
-                    "markdownDescription": "The start directory when executing terminal command."
+                    "markdownDescription": "The start directory when executing the terminal command. Absolute paths are used as-is. Relative paths are resolved from the workspace root folder."
                   },
                   "focus": {
                     "type": "boolean",
@@ -314,30 +325,33 @@
       }
     ]
   },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "publish": "vsce publish",
-    "compile": "rimraf out && tsc -p ./ && npm run copyfiles",
-    "copyfiles": "copyfiles \"./src/schema/*.json\" \"./out\"",
-    "watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "node ./node_modules/vscode/bin/test"
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "dependencies": {
+    "convert": "^7.0.0",
+    "glob": "^13.0.6"
   },
   "devDependencies": {
-    "@types/glob": "^7.2.0",
+    "@ostermann/eslint-config": "0.0.10",
     "@types/mocha": "^2.2.32",
-    "@types/node": "^16.10.2",
-    "@typescript-eslint/eslint-plugin": "^5.13.0",
-    "@typescript-eslint/parser": "^5.13.0",
+    "@types/node": "^24.13.3",
+    "@types/vscode": "^1.93.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "concurrently": "^9.0.0",
     "copyfiles": "^2.4.1",
-    "eslint": "^8.10.0",
-    "eslint-plugin-simple-import-sort": "^7.0.0",
-    "eslint-plugin-tsdoc": "^0.2.14",
+    "eslint": "9.39.4",
+    "eslint-plugin-import-newlines": "1.4.0",
     "mocha": "^6.1.4",
-    "typescript": "^4.4.3",
-    "vscode": "^1.0.0"
+    "rimraf": "^6.1.3",
+    "ts-plugin-sort-import-suggestions": "1.0.4",
+    "tsc-alias": "^1.8.10",
+    "type-fest": "^5.8.0",
+    "typescript": "^6.0.3",
+    "vsce": "^2.15.0"
   },
-  "dependencies": {
-    "glob": "^8.0.3"
+  "engines": {
+    "vscode": "^1.93.0"
   }
 }

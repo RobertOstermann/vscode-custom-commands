@@ -1,0 +1,10 @@
+# lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# github files
+.github/CODEOWNERS
+
+# build files
+out

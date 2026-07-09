@@ -1,14 +1,15 @@
 import * as vscode from "vscode";
 
-import Button from "./buttons/button";
-import Command from "./buttons/command";
-import Dropdown from "./buttons/dropdown";
-import Configuration from "./helpers/configuration";
-import { buildConfigFromPackageJson } from "./packageJson";
-import CommandButton from "./types/command";
-import StatusBarButton from "./types/statusBar";
+import { Button } from "@/buttons/button";
+import { Command } from "@/buttons/command";
+import { Dropdown } from "@/buttons/dropdown";
+import { Configuration } from "@/helpers/configuration";
+import type { CommandButton } from "@/types/command";
+import type { StatusBarButton } from "@/types/statusBar";
 
-const init = async (
+import { buildConfigFromPackageJson } from "./packageJson";
+
+export const init = async (
   context: vscode.ExtensionContext,
   disposables: vscode.Disposable[],
 ): Promise<vscode.Disposable[]> => {
@@ -43,5 +44,3 @@ const init = async (
 
   return disposables;
 };
-
-export default init;

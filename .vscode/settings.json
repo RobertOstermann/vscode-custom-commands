@@ -1,9 +1,47 @@
-// Place your settings in this file to overwrite default and user settings.
 {
-  "files.exclude": {
-    "out": false // set this to true to hide the "out" folder with the compiled JS files
+  /* Editor */
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  /* Explorer */
+  "explorer.fileNesting.patterns": {
+    "eslint.config.js": "prettier.config.js, .prettierignore",
+    "eslint.config.ts": "prettier.config.js, .prettierignore",
+    "tsconfig.json": ".editorconfig, app.config.ts, app.json, babel.config.ts, eas.json, expo-env.d.ts, metro.config.cjs, nativewind-env.d.ts, tailwind.config.js, *.p8, google-service-account-key.json"
   },
+  /* Files */
+  "files.associations": {
+    ".prettierrc": "jsonc",
+    "*.env": "properties",
+    ".env.*": "properties",
+    "*.css": "tailwindcss"
+  },
+  /* Search */
   "search.exclude": {
-    "out": true // set this to false to include "out" folder in search results
-  }
+    "**/node_modules": true,
+    "**/out": true
+  },
+  "search.useIgnoreFiles": false,
+  /* Extensions */
+  // ESLint
+  "editor.codeActionsOnSave": ["source.fixAll.eslint"],
+  "eslint.format.enable": true,
+  // Path AutoComplete
+  "path-autocomplete.extensionOnImport": true,
+  /* File Types */
+  // Javascript
+  "[javascript]": {
+    "editor.defaultColorDecorators": "always"
+  },
+  // Typescript
+  "[typescript]": {
+    "editor.defaultColorDecorators": "always"
+  },
+  "js/ts.format.semicolons": "insert",
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.preferences.includePackageJsonAutoImports": "on",
+  "js/ts.preferences.quoteStyle": "double",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  /* Other */
+  "git.branchPrefix": "feature/",
+  "npm.packageManager": "npm",
+  "better-todo-tree.tree.scanMode": "workspace"
 }

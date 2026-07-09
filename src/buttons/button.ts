@@ -1,22 +1,39 @@
 import * as vscode from "vscode";
 
-import StatusBarButton from "../types/statusBar";
+import { Utilities } from "@/helpers/utilities";
+import type { StatusBarButton } from "@/types/statusBar";
 
-export default class Button {
+export class Button {
   static createStatusBarButton(
     options: StatusBarButton,
     disposables: vscode.Disposable[],
   ): void {
-    const statusBarButton = vscode.window.createStatusBarItem(
-      options.alignment,
+    const statusBarItem = vscode.window.createStatusBarItem(
+      options.alignment ?? vscode.StatusBarAlignment.Left,
       options.priority,
     );
-    statusBarButton.color = options.color;
-    statusBarButton.command = options.command;
-    statusBarButton.text = options.label;
-    statusBarButton.tooltip = options.tooltip;
 
-    statusBarButton.show();
-    disposables.push(statusBarButton);
+    const updateLabel = () => {
+      statusBarItem.text =
+        Utilities.interpolateString(undefined, options.label) ?? "";
+    };
+
+    updateLabel();
+    statusBarItem.color = options.color;
+    statusBarItem.command = options.command;
+    statusBarItem.tooltip = options.tooltip;
+    statusBarItem.show();
+
+    const listener = vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        updateLabel();
+      }
+    });
+
+    disposables.push(statusBarItem, listener);
+
+    Utilities.appendLine(
+      `[Button] Status bar button created: '${options.command}'`,
+    );
   }
 }

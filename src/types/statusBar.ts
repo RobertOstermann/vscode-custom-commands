@@ -1,12 +1,10 @@
-import { StatusBarAlignment } from "vscode";
+import type { StatusBarAlignment } from "vscode";
 
-type StatusBarButton = {
-  alignment: StatusBarAlignment;
-  color: string;
+export type StatusBarButton = {
+  alignment: StatusBarAlignment | undefined;
+  color: string | undefined;
   command: string;
-  label: string;
-  priority: number;
-  tooltip: string;
+  label: string | null | undefined;
+  priority: number | undefined;
+  tooltip: string | undefined;
 };
-
-export default StatusBarButton;

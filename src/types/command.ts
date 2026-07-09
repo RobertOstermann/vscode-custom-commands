@@ -1,4 +1,4 @@
-import { StatusBarAlignment } from "vscode";
+import type { StatusBarAlignment } from "vscode";
 
 export type TerminalOptions = {
   name?: string;
@@ -8,7 +8,7 @@ export type TerminalOptions = {
   singleInstance?: boolean;
 };
 
-type CommandButton = {
+export type CommandButton = {
   id?: string;
   label?: string;
   command?: string;
@@ -22,5 +22,3 @@ type CommandButton = {
   useVsCodeApi?: boolean;
   args?: string[];
 };
-
-export default CommandButton;

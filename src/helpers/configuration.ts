@@ -4,11 +4,12 @@ import { homedir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
-import CommandButton from "../types/command";
-import DropdownButton from "../types/dropdown";
-import Variables from "../types/variables";
+import { Utilities } from "@/helpers/utilities";
+import type { CommandButton } from "@/types/command";
+import type { DropdownButton } from "@/types/dropdown";
+import type { Variables } from "@/types/variables";
 
-export default class Configuration {
+export class Configuration {
   static extensionName = "betterStatusBar";
 
   /**
@@ -28,13 +29,17 @@ export default class Configuration {
       },
     );
 
-    if (Configuration.configurationFilePath() !== null) {
+    if (Configuration.configurationFilePaths() !== null) {
       const configurationFileChange = vscode.workspace.onDidSaveTextDocument(
         (event) => {
-          if (
-            event.uri.fsPath.replace(/\\/g, "/").toLowerCase() ===
-            Configuration.configurationFilePath().toLowerCase()
-          ) {
+          const savedPath = event.uri.fsPath.replace(/\\/g, "/").toLowerCase();
+          const isConfigFile = Configuration.configurationFilePaths().some(
+            (filePath) => filePath.toLowerCase() === savedPath,
+          );
+          if (isConfigFile) {
+            Utilities.appendLine(
+              `[Configuration] Configuration file saved: '${savedPath}', refreshing buttons...`,
+            );
             vscode.commands.executeCommand(
               `${Configuration.extensionName}.refreshButtons`,
             );
@@ -64,7 +69,7 @@ export default class Configuration {
   /**
    * @returns Determines whether or not to use the configuration file.
    */
-  static useConfigurationFile(): boolean {
+  static applyConfigurationFile(): boolean {
     const configurationFile = Configuration.configurationFile() || "";
 
     return configurationFile === "" ? false : true;
@@ -73,70 +78,149 @@ export default class Configuration {
   /**
    * @returns Determines whether or not to use the configuration file.
    */
-  static configurationFile(): string {
+  static configurationFile(): string | undefined {
     return vscode.workspace
       .getConfiguration(Configuration.extensionName)
       .get("configurationFile");
   }
 
   /**
-   * @returns The path to the configuration file.
+   * @returns The path to the configuration files.
    */
-  static configurationFilePath(): string {
+  static configurationFilePaths(): string[] {
     const configurationFile = Configuration.configurationFile() || "";
-    // TODO: Add more options
-    const pattern =
-      "{**/{s,S}tatus{b,B}ar.{json,jsonc},**/{b,B}etter{s,S}tatus{b,B}ar.{json,jsonc},.vscode/{s,S}tatus{b,B}ar.{json,jsonc}},.vscode/{b,B}etter{s,S}tatus{b,B}ar.{json,jsonc}}";
 
     if (configurationFile.toLowerCase() === "find") {
-      let folder = "";
-      let files = [];
-      vscode.workspace.workspaceFolders.forEach((workspaceFolder) => {
-        if (files[0] !== undefined) return;
+      Utilities.appendLine(
+        `[Configuration] Searching for configuration files...`,
+      );
+      const pattern =
+        "**/{statusbar,statusBar,StatusBar,betterstatusbar,betterStatusBar,BetterStatusBar}.{json,jsonc}";
+      const paths: string[] = [];
 
-        folder = workspaceFolder.uri.fsPath.replace(/\\/g, "/");
-        files = glob.sync(pattern, { cwd: folder });
+      vscode.workspace.workspaceFolders?.forEach((workspaceFolder) => {
+        const folder = workspaceFolder.uri.fsPath.replace(/\\/g, "/");
+        Utilities.appendLine(`[Configuration] Searching in: '${folder}'`);
+        const files = glob.sync(pattern, { cwd: folder, dot: true });
+        files.forEach((file) => {
+          const filePath = folder + "/" + file;
+          Utilities.appendLine(
+            `[Configuration] Found configuration file: '${filePath}'`,
+          );
+          paths.push(filePath);
+        });
       });
 
-      if (files[0] === undefined) return null;
-      return folder + "/" + files[0];
-    } else {
-      return configurationFile;
+      if (!paths.length) {
+        Utilities.appendLine(`[Configuration] No configuration files found.`);
+      }
+      return paths;
     }
+
+    if (configurationFile) {
+      Utilities.appendLine(
+        `[Configuration] Using configuration file: '${configurationFile}'`,
+      );
+      return [configurationFile];
+    }
+
+    return [];
   }
 
   /**
-   * @returns The JSON object for the configuration file.
+   * @returns The merged JSON object for all configuration files.
    */
   static configurationFileJSON(): any {
-    const path = Configuration.configurationFilePath();
-    if (!Configuration.useConfigurationFile() || path === null) return null;
-    if (!fs.existsSync(path)) return null;
+    const paths = Configuration.configurationFilePaths();
+    if (!Configuration.applyConfigurationFile() || !paths.length) return null;
 
-    let fileData = fs.readFileSync(path).toString();
-    // Strip the comments.
-    fileData = fileData.replace(
-      /\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g,
-      (m, g) => (g ? "" : m),
-    );
-    // Remove the default name of betterStatusBar.
-    fileData = fileData.replace(/betterStatusBar\./g, "");
-    try {
-      return JSON.parse(fileData);
-    } catch (error) {
-      console.log("Error parsing configuration file.");
-      return null;
+    const merged: any = { commands: [], dropdowns: [] };
+
+    for (const filePath of paths) {
+      if (!fs.existsSync(filePath)) {
+        Utilities.appendLine(
+          `[Configuration] Configuration file not found: ${filePath}`,
+        );
+        continue;
+      }
+
+      Utilities.appendLine(
+        `[Configuration] Reading configuration file: ${filePath}`,
+      );
+      let fileData = fs.readFileSync(filePath).toString();
+      fileData = fileData.replace(
+        /\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g,
+        (m, g) => (g ? "" : m),
+      );
+      fileData = fileData.replace(/,(\s*[}\]])/g, "$1");
+      fileData = fileData.replace(/betterStatusBar\./g, "");
+
+      try {
+        const json = JSON.parse(fileData);
+        Utilities.appendLine(
+          `[Configuration] Successfully parsed: '${filePath}'`,
+        );
+
+        if (json.commands) {
+          json.commands.forEach((command: CommandButton) => {
+            const isDuplicate = merged.commands.some(
+              (c: CommandButton) => c.id && c.id === command.id,
+            );
+            if (isDuplicate) {
+              Utilities.appendLine(
+                `[Configuration] Skipping duplicate command id: '${command.id}' (first file wins)`,
+              );
+            } else {
+              merged.commands.push(command);
+            }
+          });
+        }
+
+        if (json.dropdowns) {
+          json.dropdowns.forEach((dropdown: DropdownButton) => {
+            const isDuplicate = merged.dropdowns.some(
+              (d: DropdownButton) => d.id && d.id === dropdown.id,
+            );
+            if (isDuplicate) {
+              Utilities.appendLine(
+                `[Configuration] Skipping duplicate dropdown id: '${dropdown.id}' (first file wins)`,
+              );
+            } else {
+              merged.dropdowns.push(dropdown);
+            }
+          });
+        }
+
+        // Merge top-level scalar values (first file wins)
+        Object.keys(json).forEach((key) => {
+          if (
+            key !== "commands" &&
+            key !== "dropdowns" &&
+            merged[key] === undefined
+          ) {
+            merged[key] = json[key];
+          }
+        });
+      } catch (error) {
+        Utilities.appendLine(
+          `[Configuration] Error parsing configuration file '${filePath}': ${error}`,
+        );
+      }
     }
+
+    return merged;
   }
 
   /**
    * @returns The color to use for status bar button text. The default is the theme color.
    */
   static defaultColor(): string {
-    if (Configuration.useConfigurationFile()) {
+    if (Configuration.applyConfigurationFile()) {
       const configuration = Configuration.configurationFileJSON();
       const defaultColor = configuration?.defaultColor;
-      if (defaultColor !== undefined) defaultColor;
+      if (defaultColor !== undefined) {
+        return defaultColor;
+      }
     }
 
     return vscode.workspace
@@ -148,7 +232,7 @@ export default class Configuration {
    * @returns Automatically generate buttons from npm commands listed in `package.json`.
    */
   static loadNpmCommands(): boolean {
-    if (Configuration.useConfigurationFile()) {
+    if (Configuration.applyConfigurationFile()) {
       const configuration = Configuration.configurationFileJSON();
       const loadNpmCommands = configuration?.loadNpmCommands;
       if (loadNpmCommands !== undefined) return loadNpmCommands;
@@ -163,7 +247,7 @@ export default class Configuration {
    * @returns The text for the reload button. The default is to reload on configuration change and not show a reload button.
    */
   static reloadButton(): string | null {
-    if (Configuration.useConfigurationFile()) {
+    if (Configuration.applyConfigurationFile()) {
       const configuration = Configuration.configurationFileJSON();
       const reloadButton = configuration?.reloadButton;
       if (reloadButton !== undefined) return reloadButton;
@@ -185,47 +269,60 @@ export default class Configuration {
    * @returns A list of status bar buttons for specified commands.
    */
   static commands(): Array<CommandButton> {
-    let commands = [];
+    Utilities.appendLine(`[Configuration] Loading commands...`);
+    let commands: CommandButton[] = [];
 
-    if (Configuration.useConfigurationFile()) {
+    if (Configuration.applyConfigurationFile()) {
       const configuration = Configuration.configurationFileJSON();
       commands = configuration?.commands ? configuration.commands : [];
+      Utilities.appendLine(
+        `[Configuration] Loaded ${commands.length} commands from configuration file.`,
+      );
     }
 
     const userCommands = vscode.workspace
       .getConfiguration(Configuration.extensionName)
       .get<CommandButton[]>("commands", []);
+    Utilities.appendLine(
+      `[Configuration] Loaded ${userCommands.length} commands from VS Code settings.`,
+    );
 
-    commands = [...commands, ...userCommands];
+    const config = vscode.workspace.getConfiguration(
+      Configuration.extensionName,
+    );
+    const inspect = config.inspect<CommandButton[]>("commands");
 
-    commands.forEach((command) => {
-      // Set defaults for the undefined properties. ID, label, and command must be defined.
-      if (command.alignment === undefined)
-        command.alignment = vscode.StatusBarAlignment.Left;
-      if (command.color === undefined)
-        command.color = Configuration.defaultColor();
-      if (command.priority === undefined) command.priority = 0;
-      if (command.saveAll === undefined) command.saveAll = false;
-      if (command.showButton === undefined) command.showButton = true;
-      if (command.terminal === undefined)
-        command.terminal = {
-          name: null,
-          clear: true,
-          cwd: null,
-          focus: false,
-          singleInstance: true,
-        };
-      if (command.terminal?.name === undefined) command.terminal.name = null;
-      if (command.terminal?.clear === undefined) command.terminal.clear = true;
-      if (command.terminal?.cwd === undefined) command.terminal.cwd = null;
-      if (command.terminal?.focus === undefined) command.terminal.focus = false;
-      if (command.terminal?.singleInstance === undefined)
-        command.terminal.singleInstance = true;
-      if (command.tooltip === undefined) command.tooltip = null;
-      if (command.useVsCodeApi === undefined) command.useVsCodeApi = false;
-      if (command.args === undefined) command.args = [];
+    const globalCommands = inspect?.globalValue ?? [];
+    const workspaceCommands = inspect?.workspaceValue ?? [];
+    const workspaceFolderCommands = inspect?.workspaceFolderValue ?? [];
+
+    Utilities.appendLine(
+      `[Configuration] Loaded ${globalCommands.length} commands from user settings.`,
+    );
+    Utilities.appendLine(
+      `[Configuration] Loaded ${workspaceCommands.length} commands from workspace settings.`,
+    );
+    Utilities.appendLine(
+      `[Configuration] Loaded ${workspaceFolderCommands.length} commands from workspace folder settings.`,
+    );
+
+    [
+      ...workspaceFolderCommands,
+      ...workspaceCommands,
+      ...globalCommands,
+    ].forEach((command) => {
+      const isDuplicate = commands.some((x) => x.id && x.id === command.id);
+      if (isDuplicate) {
+        Utilities.appendLine(
+          `[Configuration] Skipping duplicate command id: '${command.id}'`,
+        );
+      } else {
+        commands.push(command);
+      }
     });
 
+    commands.forEach((command) => Configuration.applyCommandDefaults(command));
+    Utilities.appendLine(`[Configuration] Total commands: ${commands.length}`);
     return commands;
   }
 
@@ -233,49 +330,65 @@ export default class Configuration {
    * @returns A status bar button that opens a quick-select of specified commands.
    */
   static dropdowns(): Array<DropdownButton> {
-    let dropdowns = [];
+    Utilities.appendLine(`[Configuration] Loading dropdowns...`);
+    let dropdowns: DropdownButton[] = [];
 
-    if (Configuration.useConfigurationFile()) {
+    if (Configuration.applyConfigurationFile()) {
       const configuration = Configuration.configurationFileJSON();
       dropdowns = configuration?.dropdowns ? configuration.dropdowns : [];
+      Utilities.appendLine(
+        `[Configuration] Loaded ${dropdowns.length} dropdowns from configuration file.`,
+      );
     }
 
-    const userDropdowns = vscode.workspace
-      .getConfiguration(Configuration.extensionName)
-      .get<DropdownButton[]>("dropdowns", []);
+    const config = vscode.workspace.getConfiguration(
+      Configuration.extensionName,
+    );
+    const inspect = config.inspect<CommandButton[]>("dropdowns");
 
-    dropdowns = [...dropdowns, ...userDropdowns];
+    const globalDropdowns = inspect?.globalValue ?? [];
+    const workspaceDropdowns = inspect?.workspaceValue ?? [];
+    const workspaceFolderDropdowns = inspect?.workspaceFolderValue ?? [];
 
-    dropdowns.forEach((dropdown) => {
-      // Set defaults for the undefined properties.
-      if (dropdown.alignment === undefined)
-        dropdown.alignment = vscode.StatusBarAlignment.Left;
-      if (dropdown.color === undefined)
-        dropdown.color = Configuration.defaultColor();
-      if (dropdown.priority === undefined) dropdown.priority = 0;
-      if (dropdown.tooltip === undefined) dropdown.tooltip = null;
-      if (dropdown.options === undefined)
-        dropdown.options = {
-          ignoreFocusOut: false,
-          placeholder: null,
-          title: null,
-        };
-      if (dropdown.options?.ignoreFocusOut === undefined)
-        dropdown.options.ignoreFocusOut = false;
-      if (dropdown.options?.placeholder === undefined)
-        dropdown.options.placeholder = null;
-      if (dropdown.showButton === undefined) dropdown.showButton = true;
-      if (dropdown.options?.title === undefined) dropdown.options.title = null;
+    Utilities.appendLine(
+      `[Configuration] Loaded ${globalDropdowns.length} dropdowns from user settings.`,
+    );
+    Utilities.appendLine(
+      `[Configuration] Loaded ${workspaceDropdowns.length} dropdowns from workspace settings.`,
+    );
+    Utilities.appendLine(
+      `[Configuration] Loaded ${workspaceFolderDropdowns.length} dropdowns from workspace folder settings.`,
+    );
+
+    [
+      ...workspaceFolderDropdowns,
+      ...workspaceDropdowns,
+      ...globalDropdowns,
+    ].forEach((dropdown) => {
+      const isDuplicate = dropdowns.some((x) => x.id && x.id === dropdown.id);
+      if (isDuplicate) {
+        Utilities.appendLine(
+          `[Configuration] Skipping duplicate command id: '${dropdown.id}'`,
+        );
+      } else {
+        dropdowns.push(dropdown);
+      }
     });
 
+    dropdowns.forEach((dropdown) =>
+      Configuration.applyDropdownDefaults(dropdown),
+    );
+    Utilities.appendLine(
+      `[Configuration] Total dropdowns: ${dropdowns.length}`,
+    );
     return dropdowns;
   }
 
   /**
    * @returns The variables for a terminal
    */
-  static variables(command: CommandButton): Variables {
-    const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  static variables(command: CommandButton | undefined): Variables {
+    const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? null;
 
     const vars: Variables = {
       // - the path of the folder opened in VS Code
@@ -323,7 +436,7 @@ export default class Configuration {
         : null,
 
       // - the task runner's current working directory on startup
-      cwd: command.terminal.cwd || rootPath || homedir(),
+      cwd: command?.terminal?.cwd || rootPath || homedir(),
 
       // - the current selected line number in the active file
       lineNumber: vscode.window.activeTextEditor
@@ -342,5 +455,60 @@ export default class Configuration {
     };
 
     return vars;
+  }
+
+  /**
+   * Sets default values for undefined properties on a command.
+   */
+  private static applyCommandDefaults(command: CommandButton): void {
+    if (command.alignment === undefined)
+      command.alignment = vscode.StatusBarAlignment.Left;
+    if (command.color === undefined)
+      command.color = Configuration.defaultColor();
+    if (command.priority === undefined) command.priority = 0;
+    if (command.saveAll === undefined) command.saveAll = false;
+    if (command.showButton === undefined) command.showButton = true;
+    if (command.terminal === undefined)
+      command.terminal = {
+        name: undefined,
+        clear: true,
+        cwd: undefined,
+        focus: false,
+        singleInstance: true,
+      };
+    if (command.terminal?.name === undefined) command.terminal.name = undefined;
+    if (command.terminal?.clear === undefined) command.terminal.clear = true;
+    if (command.terminal?.cwd === undefined) command.terminal.cwd = undefined;
+    if (command.terminal?.focus === undefined) command.terminal.focus = false;
+    if (command.terminal?.singleInstance === undefined)
+      command.terminal.singleInstance = true;
+    if (command.tooltip === undefined) command.tooltip = undefined;
+    if (command.useVsCodeApi === undefined) command.useVsCodeApi = false;
+    if (command.args === undefined) command.args = [];
+  }
+
+  /**
+   * Sets default values for undefined properties on a dropdown.
+   */
+  private static applyDropdownDefaults(dropdown: DropdownButton): void {
+    if (dropdown.alignment === undefined)
+      dropdown.alignment = vscode.StatusBarAlignment.Left;
+    if (dropdown.color === undefined)
+      dropdown.color = Configuration.defaultColor();
+    if (dropdown.priority === undefined) dropdown.priority = 0;
+    if (dropdown.tooltip === undefined) dropdown.tooltip = undefined;
+    if (dropdown.options === undefined)
+      dropdown.options = {
+        ignoreFocusOut: false,
+        placeholder: undefined,
+        title: undefined,
+      };
+    if (dropdown.options?.ignoreFocusOut === undefined)
+      dropdown.options.ignoreFocusOut = false;
+    if (dropdown.options?.placeholder === undefined)
+      dropdown.options.placeholder = undefined;
+    if (dropdown.showButton === undefined) dropdown.showButton = true;
+    if (dropdown.options?.title === undefined)
+      dropdown.options.title = undefined;
   }
 }

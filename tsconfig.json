@@ -5,8 +5,25 @@
     "outDir": "out",
     "lib": ["es2018"],
     "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+
+    /* Project Setup */
     "rootDir": ".",
-    "forceConsistentCasingInFileNames": true
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "skipLibCheck": true,
+
+    /* Plugins */
+    "plugins": [
+      /* Sort autocomplete suggestions */
+      {
+        "name": "ts-plugin-sort-import-suggestions",
+        "moveUpPatterns": ["@/", "\\.{1,2}/"], // Move local imports up
+        "moveDownPatterns": ["@radix-ui", "lucide-react"] // Move less used imports down
+      }
+    ]
   },
   "exclude": ["node_modules", ".vscode-test"]
 }
