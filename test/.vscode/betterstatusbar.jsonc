@@ -27,7 +27,7 @@
         "name": "temp",
         // cwd resolves from the root of the window.
         "cwd": "./terminal",
-        "singleInstance": true,
+        "reuse": "name",
         "clear": true,
         "focus": false,
       },

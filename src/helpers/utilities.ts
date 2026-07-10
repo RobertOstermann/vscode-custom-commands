@@ -75,7 +75,7 @@ export class Utilities {
       const path = placeholder?.replace("${", "").replace("}", "");
       if (path) {
         const variable = variables[path as keyof Variables];
-        if (variable && placeholder) {
+        if (variable !== null && variable !== undefined && placeholder) {
           text = text.replace(placeholder, String(variable));
         }
       }

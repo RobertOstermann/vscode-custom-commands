@@ -1,7 +1,7 @@
 {
   "name": "better-status-bar",
   "displayName": "Better Status Bar",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Add customizable buttons to the status bar to execute actions or tasks",
   "categories": [
     "Other"
@@ -148,9 +148,12 @@
                     "markdownDescription": "The name of the terminal for this command. If a terminal with this name is already open then the terminal will be re-used."
                   },
                   "clear": {
-                    "type": "boolean",
+                    "type": [
+                      "boolean",
+                      "string"
+                    ],
                     "default": true,
-                    "markdownDescription": "Determines if the terminal is cleared before the specified command is run."
+                    "markdownDescription": "Determines if the terminal is cleared before the specified command is run. Set to `true` to use the default clear command (`clear` on macOS/Linux, `cls` on Windows), `false` to disable, or a custom string to use as the clear command."
                   },
                   "cwd": {
                     "type": [
@@ -168,7 +171,27 @@
                   "singleInstance": {
                     "type": "boolean",
                     "default": true,
-                    "markdownDescription": "Re-open the associated terminal each time this action is activated."
+                    "markdownDescription": "Re-open the associated terminal each time this action is activated.",
+                    "deprecationMessage": "Deprecated: Use `reuse` instead."
+                  },
+                  "reuse": {
+                    "type": "string",
+                    "enum": [
+                      "name",
+                      "active",
+                      "never",
+                      "dispose",
+                      "disposeOnSuccess"
+                    ],
+                    "enumDescriptions": [
+                      "Reuse a terminal matching the name and cwd.",
+                      "Reuse the currently active terminal.",
+                      "Always create a new terminal.",
+                      "Reuse a terminal matching the name and cwd, then dispose it after the command runs.",
+                      "Reuse a terminal matching the name and cwd, then dispose it only if the command succeeds."
+                    ],
+                    "default": "name",
+                    "markdownDescription": "Determines how the terminal is reused when the command is run."
                   }
                 }
               },

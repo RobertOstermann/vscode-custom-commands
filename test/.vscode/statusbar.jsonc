@@ -22,7 +22,7 @@
       "terminal": {
         // Setting a name allows the terminal to be re-used by other commands with the same name.
         "name": "temp",
-        "singleInstance": true,
+        "reuse": "name",
         "clear": true,
         "focus": false,
       },
@@ -47,7 +47,7 @@
         "name": "temp",
         // cwd resolves from the root of the window.
         "cwd": "./terminal",
-        "singleInstance": true,
+        "reuse": "name",
         "clear": true,
         "focus": false,
       },

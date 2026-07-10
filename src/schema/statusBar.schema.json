@@ -1,24 +1,21 @@
 {
-  "$id": "https://example.com/person.schema.json",
+  "$id": "https://raw.githubusercontent.com/RobertOstermann/vscode-custom-commands/refs/heads/develop/src/schema/statusBar.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Status Bar",
   "type": "object",
   "properties": {
     "betterStatusBar.defaultColor": {
       "type": "string",
-      "required": false,
       "default": "statusBar.foreground",
       "markdownDescription": "The color to use for status bar button text. The default is the theme color."
     },
     "betterStatusBar.loadNpmCommands": {
       "type": "boolean",
-      "required": false,
       "default": false,
       "markdownDescription": "Automatically generate buttons from npm commands listed in `package.json`."
     },
     "betterStatusBar.reloadButton": {
       "type": ["string", "null"],
-      "required": false,
       "default": null,
       "markdownDescription": "The text for the reload button. The default is to reload on configuration change and not show a reload button."
     },
@@ -90,24 +87,44 @@
                 "markdownDescription": "The name of the terminal for this command. If a terminal with this name is already open then the terminal will be re-used."
               },
               "clear": {
-                "type": "boolean",
+                "type": ["boolean", "string"],
                 "default": true,
-                "markdownDescription": "Determines if the terminal is cleared before the specified command is run."
+                "markdownDescription": "Determines if the terminal is cleared before the specified command is run. Set to `true` to use the default clear command (`clear` on macOS/Linux, `cls` on Windows), `false` to disable, or a custom string to use as the clear command."
               },
               "cwd": {
                 "type": ["string", "null"],
                 "default": null,
-                "markdownDescription": "The start directory when executing terminal command."
+                "markdownDescription": "The start directory when executing the terminal command. Absolute paths are used as-is. Relative paths are resolved from the workspace root folder."
               },
               "focus": {
                 "type": "boolean",
                 "default": false,
                 "markdownDescription": "Focus the terminal after executing the command."
               },
+              "reuse": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "active",
+                  "never",
+                  "dispose",
+                  "disposeOnSuccess"
+                ],
+                "enumDescriptions": [
+                  "Reuse a terminal matching the name and cwd.",
+                  "Reuse the currently active terminal.",
+                  "Always create a new terminal.",
+                  "Reuse a terminal matching the name and cwd, then dispose it after the command runs.",
+                  "Reuse a terminal matching the name and cwd, then dispose it only if the command succeeds."
+                ],
+                "default": "name",
+                "markdownDescription": "Determines how the terminal is reused when the command is run."
+              },
               "singleInstance": {
                 "type": "boolean",
                 "default": true,
-                "markdownDescription": "Re-open the associated terminal each time this action is activated."
+                "markdownDescription": "Re-open the associated terminal each time this action is activated.",
+                "deprecationMessage": "Deprecated: Use `reuse` instead."
               }
             }
           },
@@ -127,13 +144,14 @@
               "type": "string"
             },
             "default": [],
-            "markdownDescription": "A list of arguments passed to VS Code command\n\nOnly valid when `useVsCodeApi` is `true`."
+            "markdownDescription": "A list of arguments passed to VS Code command.\n\nOnly valid when `useVsCodeApi` is `true`."
           }
         }
       }
     },
     "betterStatusBar.dropdowns": {
       "type": "array",
+      "default": [],
       "markdownDescription": "A status bar button that opens a quick-select of specified commands.",
       "items": {
         "type": "object",
@@ -148,7 +166,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "markdownDescription": "The unique ID of the quick-select button\n\nThe ID is prepended with the extension name (betterStatusBar) to create the vscode command id and can be used to create keyboard shortcuts\n\nThis should not have any spaces or special characters."
+            "markdownDescription": "The unique ID of the quick-select button.\n\nThe ID is prepended with the extension name (betterStatusBar) to create the VS Code command id and can be used to create keyboard shortcuts.\n\nThis should not have any spaces or special characters."
           },
           "label": {
             "type": "string",
@@ -200,7 +218,7 @@
               "ignoreFocusOut": {
                 "type": "boolean",
                 "default": false,
-                "markdownDescription": "Determines if the dropdown should stay open even when loosing dropdown focus."
+                "markdownDescription": "Determines if the dropdown should stay open even when losing dropdown focus."
               },
               "placeholder": {
                 "type": ["string", "null"],

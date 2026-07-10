@@ -2,10 +2,11 @@ import type { StatusBarAlignment } from "vscode";
 
 export type TerminalOptions = {
   name?: string;
-  clear?: boolean;
+  clear?: string | boolean;
   cwd?: string;
   focus?: boolean;
   singleInstance?: boolean;
+  reuse?: "name" | "active" | "never" | "dispose" | "disposeOnSuccess";
 };
 
 export type CommandButton = {

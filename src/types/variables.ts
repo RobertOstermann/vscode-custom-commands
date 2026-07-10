@@ -1,14 +1,21 @@
 export type Variables = {
+  userHome: string | null;
   workspaceFolder: string | null;
   workspaceFolderBasename: string | null;
   file: string | null;
+  fileWorkspaceFolder: string | null;
   relativeFile: string | null;
+  relativeFileDirname: string | null;
   fileBasename: string | null;
   fileBasenameNoExtension: string | null;
-  fileDirname: string | null;
   fileExtname: string | null;
+  fileDirname: string | null;
+  fileDirnameBasename: string | null;
   cwd: string | null;
   lineNumber: number | null;
+  columnNumber: number | null;
   selectedText: string | null;
   execPath: string | null;
+  pathSeparator: string | null;
+  "/": string | null;
 };

@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as glob from "glob";
-import { homedir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
@@ -387,74 +386,48 @@ export class Configuration {
   /**
    * @returns The variables for a terminal
    */
-  static variables(command: CommandButton | undefined): Variables {
-    const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? null;
+  static variables(command?: CommandButton): Variables {
+    const editor = vscode.window.activeTextEditor;
+    const workspaceFolder =
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? null;
+    const file = editor?.document.uri.fsPath ?? null;
+    const fileWorkspaceFolder = editor
+      ? (vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath ??
+        null)
+      : null;
+    const separator = path.sep;
 
-    const vars: Variables = {
-      // - the path of the folder opened in VS Code
-      workspaceFolder: rootPath,
-
-      // - the name of the folder opened in VS Code without any slashes (/)
-      workspaceFolderBasename: rootPath ? path.basename(rootPath) : null,
-
-      // - the current opened file
-      file: vscode.window.activeTextEditor
-        ? vscode.window.activeTextEditor.document.fileName
+    return {
+      userHome: process.env.HOME ?? process.env.USERPROFILE ?? null,
+      workspaceFolder,
+      workspaceFolderBasename: workspaceFolder
+        ? path.basename(workspaceFolder)
         : null,
-
-      // - the current opened file relative to workspaceFolder
+      file,
+      fileWorkspaceFolder,
       relativeFile:
-        vscode.window.activeTextEditor && rootPath
-          ? path.relative(
-              rootPath,
-              vscode.window.activeTextEditor.document.fileName,
-            )
+        file && workspaceFolder ? path.relative(workspaceFolder, file) : null,
+      relativeFileDirname:
+        file && workspaceFolder
+          ? path.relative(workspaceFolder, path.dirname(file))
           : null,
-
-      // - the current opened file's basename
-      fileBasename: vscode.window.activeTextEditor
-        ? path.basename(vscode.window.activeTextEditor.document.fileName)
+      fileBasename: file ? path.basename(file) : null,
+      fileBasenameNoExtension: file
+        ? path.basename(file, path.extname(file))
         : null,
-
-      // - the current opened file's basename with no file extension
-      fileBasenameNoExtension: vscode.window.activeTextEditor
-        ? path.parse(
-            path.basename(vscode.window.activeTextEditor.document.fileName),
-          ).name
-        : null,
-
-      // - the current opened file's dirname
-      fileDirname: vscode.window.activeTextEditor
-        ? path.dirname(vscode.window.activeTextEditor.document.fileName)
-        : null,
-
-      // - the current opened file's extension
-      fileExtname: vscode.window.activeTextEditor
-        ? path.parse(
-            path.basename(vscode.window.activeTextEditor.document.fileName),
-          ).ext
-        : null,
-
-      // - the task runner's current working directory on startup
-      cwd: command?.terminal?.cwd || rootPath || homedir(),
-
-      // - the current selected line number in the active file
-      lineNumber: vscode.window.activeTextEditor
-        ? vscode.window.activeTextEditor.selection.active.line + 1
-        : null,
-
-      // - the current selected text in the active file
-      selectedText: vscode.window.activeTextEditor
-        ? vscode.window.activeTextEditor.document.getText(
-            vscode.window.activeTextEditor.selection,
-          )
-        : null,
-
-      // - the path to the running VS Code executable
-      execPath: process.execPath,
+      fileExtname: file ? path.extname(file) : null,
+      fileDirname: file ? path.dirname(file) : null,
+      fileDirnameBasename: file ? path.basename(path.dirname(file)) : null,
+      cwd: command?.terminal?.cwd ?? workspaceFolder,
+      lineNumber: editor ? editor.selection.active.line + 1 : null,
+      columnNumber: editor ? editor.selection.active.character + 1 : null,
+      selectedText: editor ? editor.document.getText(editor.selection) : null,
+      execPath: vscode.env.appRoot
+        ? path.join(vscode.env.appRoot, "..", "MacOS", "Electron")
+        : process.execPath,
+      pathSeparator: separator,
+      "/": separator,
     };
-
-    return vars;
   }
 
   /**

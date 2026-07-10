@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { Button } from "@/buttons/button";
 import { Configuration } from "@/helpers/configuration";
 import { Utilities } from "@/helpers/utilities";
-import type { CommandButton } from "@/types/command";
+import type { CommandButton, TerminalOptions } from "@/types/command";
 import type { StatusBarButton } from "@/types/statusBar";
 
 export class Command {
@@ -81,13 +81,26 @@ export class Command {
                 ? variables.cwd
                 : path.join(workspaceRoot ?? "", variables.cwd)
               : undefined;
-            let associatedTerminal = command.terminal?.singleInstance
-              ? vscode.window.terminals.find(
-                  (terminal) =>
-                    terminal.name === terminalName &&
-                    terminal.shellIntegration?.cwd?.fsPath === cwd,
-                )
-              : undefined;
+            let associatedTerminal: vscode.Terminal | undefined;
+
+            const reuse: TerminalOptions["reuse"] =
+              command.terminal?.reuse ??
+              (command.terminal?.singleInstance === false ? "never" : "name");
+
+            if (
+              reuse === "name" ||
+              reuse === "dispose" ||
+              reuse === "disposeOnSuccess"
+            ) {
+              associatedTerminal = vscode.window.terminals.find(
+                (terminal) =>
+                  terminal.name === terminalName &&
+                  terminal.shellIntegration?.cwd?.fsPath === cwd,
+              );
+            } else if (reuse === "active") {
+              associatedTerminal = vscode.window.activeTerminal ?? undefined;
+            }
+
             let terminalAlreadyCleared = false;
 
             if (!associatedTerminal) {
@@ -116,7 +129,13 @@ export class Command {
               Utilities.appendLine(
                 `[Command] Clearing terminal: '${terminalName}'`,
               );
-              associatedTerminal.sendText("clear");
+              const clearCommand =
+                typeof command.terminal.clear === "string"
+                  ? command.terminal.clear
+                  : process.platform === "win32"
+                    ? "cls"
+                    : "clear";
+              associatedTerminal.sendText(clearCommand);
               await Utilities.sleep(250);
             }
 
@@ -126,7 +145,62 @@ export class Command {
               Utilities.appendLine(
                 `[Command] Sending text to terminal: '${interpolatedCommand}'`,
               );
-              associatedTerminal.sendText(interpolatedCommand);
+
+              if (
+                (reuse === "dispose" || reuse === "disposeOnSuccess") &&
+                associatedTerminal.shellIntegration
+              ) {
+                Utilities.appendLine(
+                  `[Command] Using shell integration to detect command completion.`,
+                );
+                const execution =
+                  associatedTerminal.shellIntegration.executeCommand(
+                    interpolatedCommand,
+                  );
+                const result =
+                  await new Promise<vscode.TerminalShellExecutionEndEvent>(
+                    (resolve) => {
+                      const listener =
+                        vscode.window.onDidEndTerminalShellExecution((e) => {
+                          if (e.execution === execution) {
+                            listener.dispose();
+                            resolve(e);
+                          }
+                        });
+                    },
+                  );
+
+                Utilities.appendLine(
+                  `[Command] Command exited with code: ${result.exitCode}`,
+                );
+
+                const shouldDispose =
+                  reuse === "dispose" || result.exitCode === 0;
+
+                if (shouldDispose) {
+                  Utilities.appendLine(
+                    `[Command] Disposing terminal: '${terminalName}'`,
+                  );
+                  associatedTerminal.dispose();
+                } else {
+                  Utilities.appendLine(
+                    `[Command] Command failed, keeping terminal open.`,
+                  );
+                }
+              } else {
+                associatedTerminal.sendText(interpolatedCommand);
+
+                if (reuse === "dispose") {
+                  Utilities.appendLine(
+                    `[Command] Shell integration unavailable, disposing terminal immediately.`,
+                  );
+                  associatedTerminal.dispose();
+                } else if (reuse === "disposeOnSuccess") {
+                  Utilities.appendLine(
+                    `[Command] Shell integration unavailable, cannot detect success — keeping terminal open.`,
+                  );
+                }
+              }
             }
           }
         },

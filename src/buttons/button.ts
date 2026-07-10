@@ -16,12 +16,13 @@ export class Button {
     const updateLabel = () => {
       statusBarItem.text =
         Utilities.interpolateString(undefined, options.label) ?? "";
+      statusBarItem.tooltip =
+        Utilities.interpolateString(undefined, options.tooltip) ?? "";
     };
 
     updateLabel();
     statusBarItem.color = options.color;
     statusBarItem.command = options.command;
-    statusBarItem.tooltip = options.tooltip;
     statusBarItem.show();
 
     const listener = vscode.window.onDidChangeActiveTextEditor((editor) => {

@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.0.1] - 2026-07-10
+
+- Add `terminal.reuse` option replacing `terminal.singleInstance` with more control: `"name"`, `"active"`, `"never"`, `"dispose"`, `"disposeOnSuccess"`.
+- Add `terminal.clear` string support — set a custom clear command instead of the default.
+- Add variable interpolation support for `tooltip`.
+- Deprecate `terminal.singleInstance` in favor of `terminal.reuse`.
+
 ## [2.0.0] - 2026-07-09
 
 ### Added

@@ -8,7 +8,7 @@
       // The label makes adding the command to the dropdown easier.
       "id": "temp",
       "label": "TEMP",
-      "command": "echo 'Hello' ${fileBasename}",
+      "command": "ls /nonexistent-directory",
       "color": "white",
       // 1 = left side | 2 = right side
       "alignment": 1,
@@ -22,8 +22,8 @@
         // Setting a name allows the terminal to be re-used by other commands with the same name.
         "name": "temp",
         // cwd resolves from the root of the window.
-        "cwd": "./terminal",
-        "singleInstance": true,
+        // "cwd": "./terminal",
+        "reuse": "disposeOnSuccess",
         "clear": true,
         "focus": false
       }
