@@ -43,5 +43,13 @@
   /* Other */
   "git.branchPrefix": "feature/",
   "npm.packageManager": "npm",
-  "better-todo-tree.tree.scanMode": "workspace"
+  "better-todo-tree.tree.scanMode": "workspace",
+  "json.schemas": [
+    {
+      "fileMatch": ["**/*.jsonc"],
+      "schema": {
+        "allowTrailingCommas": true
+      }
+    }
+  ]
 }
