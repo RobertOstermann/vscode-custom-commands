@@ -39,7 +39,7 @@ Add customizable buttons to the status bar to execute actions or tasks in VS Cod
       "terminal": {
         "name": "test",
         "focus": false,
-        "singleInstance": true,
+        "reuse": "name",
         "clear": false
       }
     },
@@ -52,7 +52,7 @@ Add customizable buttons to the status bar to execute actions or tasks in VS Cod
       "terminal": {
         "name": "test",
         "focus": false,
-        "singleInstance": true,
+        "reuse": "name",
         "clear": false
       }
     },
