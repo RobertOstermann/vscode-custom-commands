@@ -99,18 +99,26 @@ Keyboard Shortcuts can be set up for each of the commands/dropdowns that have be
 
 As seen in the previous example, vars such as `${file}` can be used. Below is a list of each of them and what they do.
 
-- `workspaceFolder` - the path of the folder opened in VS Code
-- `workspaceFolderBasename` - the name of the folder opened in VS Code without any slashes (/)
-- `file` - the current opened file
-- `relativeFile` - the current opened file relative to workspaceFolder
-- `fileBasename` - the current opened file's basename
-- `fileBasenameNoExtension` - the current opened file's basename with no file extension
-- `fileDirname` - the current opened file's dirname
-- `fileExtname` - the current opened file's extension
-- `cwd` - the task runner's current working directory on startup
-- `lineNumber` - the current selected line number in the active file
-- `selectedText` - the current selected text in the active file
-- `execPath` - the path to the running VS Code executable
+| Variable                     | Description                                                             |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| `${userHome}`                | Path of the user's home folder                                          |
+| `${workspaceFolder}`         | Path of the folder opened in VS Code                                    |
+| `${workspaceFolderBasename}` | Name of the folder opened in VS Code without any slashes (/)            |
+| `${file}`                    | Currently opened file                                                   |
+| `${fileWorkspaceFolder}`     | Currently opened file's workspace folder                                |
+| `${relativeFile}`            | Currently opened file relative to `workspaceFolder`                     |
+| `${relativeFileDirname}`     | Currently opened file's dirname relative to `workspaceFolder`           |
+| `${fileBasename}`            | Currently opened file's basename                                        |
+| `${fileBasenameNoExtension}` | Currently opened file's basename with no file extension                 |
+| `${fileExtname}`             | Currently opened file's extension                                       |
+| `${fileDirname}`             | Currently opened file's folder path                                     |
+| `${fileDirnameBasename}`     | Currently opened file's folder name                                     |
+| `${cwd}`                     | Current working directory                                               |
+| `${lineNumber}`              | Currently selected line number in the active file                       |
+| `${columnNumber}`            | Currently selected column number in the active file                     |
+| `${selectedText}`            | Currently selected text in the active file                              |
+| `${execPath}`                | Path to the running VS Code executable                                  |
+| `${pathSeparator}` or `${/}` | Character used by the operating system to separate file path components |
 
 ## Credits
 
