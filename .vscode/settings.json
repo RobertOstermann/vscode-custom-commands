@@ -5,7 +5,8 @@
   "explorer.fileNesting.patterns": {
     "eslint.config.js": "prettier.config.js, .prettierignore",
     "eslint.config.ts": "prettier.config.js, .prettierignore",
-    "tsconfig.json": ".editorconfig, app.config.ts, app.json, babel.config.ts, eas.json, expo-env.d.ts, metro.config.cjs, nativewind-env.d.ts, tailwind.config.js, *.p8, google-service-account-key.json"
+    "tsconfig.json": ".editorconfig",
+    "README.md": "CHANGELOG.md"
   },
   /* Files */
   "files.associations": {

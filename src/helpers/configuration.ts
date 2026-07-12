@@ -58,7 +58,7 @@ export class Configuration {
   }
 
   /**
-   * Initialize the configuration options that require a reload upon change.
+   * The path to this extension.
    */
   static extensionPath(context: vscode.ExtensionContext): string {
     const extensionPath = context.extensionPath.replace(/\\/g, "/");
