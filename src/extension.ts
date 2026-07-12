@@ -43,6 +43,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when the extension is deactivated
 export function deactivate() {
-  Utilities.appendLine(`[Extension] Deactivating Better Status Bar...`);
+  Utilities.appendLine(`[Extension] Deactivated.`);
   return;
 }
