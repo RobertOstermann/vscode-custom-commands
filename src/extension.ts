@@ -26,7 +26,7 @@ const initialize = async (context: vscode.ExtensionContext): Promise<void> => {
 };
 
 export function activate(context: vscode.ExtensionContext) {
-  Utilities.appendLine(`[Extension] Activating Better Status Bar...`);
+  Utilities.appendLine(`[Extension] Activating...`);
   initialize(context);
 
   const disposable = vscode.commands.registerCommand(
