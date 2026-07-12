@@ -1,6 +1,7 @@
 import { ms } from "convert";
 import * as vscode from "vscode";
 
+// eslint-disable-next-line import/no-cycle
 import { Configuration } from "@/helpers/configuration";
 import type { CommandButton } from "@/types/command";
 import type { Variables } from "@/types/variables";

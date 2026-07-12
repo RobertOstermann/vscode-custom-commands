@@ -3,6 +3,7 @@ import * as glob from "glob";
 import * as path from "path";
 import * as vscode from "vscode";
 
+// eslint-disable-next-line import/no-cycle
 import { Utilities } from "@/helpers/utilities";
 import type { CommandButton } from "@/types/command";
 import type { DropdownButton } from "@/types/dropdown";

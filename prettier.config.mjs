@@ -1,14 +1,5 @@
-/**
- * @type {import("prettier").Config}
- */
-const config = {
-  bracketSameLine: false,
-  singleQuote: false,
-  jsxSingleQuote: false,
-  printWidth: 80,
-  tabWidth: 2,
-  trailingComma: "all",
-  semi: true,
-};
+import prettierConfig from "@ostermann/prettier-config";
 
-export default config;
+export default {
+  ...prettierConfig,
+};
